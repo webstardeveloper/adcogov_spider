@@ -55,6 +55,32 @@ class AdcogovSpider(scrapy.Spider):
 
         yield scrapy.Request(url='https://sports.ladbrokes.com/en-gb/bet-in-play/', callback=self.parse)
 
+    def parse_data(self):
+        source = self.driver.page_source
+        tree = html.fromstring(source)
+
+        attributes = tree.xpath("//table[@style='width: 100%']/tbody/tr")
+        item = dict()
+        image_path_list = []
+        for attr in attributes:
+            key = self.validate(attr.xpath("./td[1]/label/text()"))
+            if key == "":
+                continue
+            if key == "Doc Links":
+                value = "; ".join(self.clean(attr.xpath("./td[2]//a/text()")))
+            else:
+                value = "; ".join(self.clean(attr.xpath("./td[2]/text()")))
+
+            item[key] = value
+
+        image_path_temp = self.validate(tree.xpath("//img[@id='documentImageInner']/@src"))
+        template = image_path_temp.split("pageNum=0")
+        image_path_list.append(image_path_temp)
+        if "Number of Pages" in item and int(item['Number of Pages']) > 1:
+            for idx in range(1, int(item['Number of Pages'])):
+                image_path_list.append(("pageNum=%d" % idx).join(template) )
+
+        return [item, image_path_list]
             
     def validate(self, val):
         try:
