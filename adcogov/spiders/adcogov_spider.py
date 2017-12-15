@@ -76,9 +76,6 @@ class AdcogovSpider(scrapy.Spider):
         image_path_temp = self.validate(tree.xpath("//img[@id='documentImageInner']/@src"))
         template = image_path_temp.split("pageNum=0")
         image_path_list.append(image_path_temp)
-        if "Number of Pages" in item and int(item['Number of Pages']) > 1:
-            for idx in range(1, int(item['Number of Pages'])):
-                image_path_list.append(("pageNum=%d" % idx).join(template) )
 
         return [item, image_path_list]
             
